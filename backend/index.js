@@ -14,5 +14,10 @@ app.get('/health', (req, res) => {
 
 app.use('/api', auditRouter);
 
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Something went wrong.' });
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Page Pulse backend running on port ${PORT}`));
