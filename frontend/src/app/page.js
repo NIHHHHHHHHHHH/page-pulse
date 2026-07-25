@@ -29,44 +29,98 @@ export default function Home() {
         setReport(data);
       }
     } catch (err) {
-      setError('Could not reach the audit service.');
+      setError('Could not reach the audit service. Is the backend running?');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className='m-10'>
-      <h1 className='mb-10 text-5xl'>Page Pulse</h1>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-16">
+        <h1 className="text-3xl font-bold text-slate-900 mb-1">Page Pulse</h1>
+        <p className="text-slate-500 mb-8">Paste a URL, get an instant page audit.</p>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://example.com"
-          required
-        />
-        <button className='ml-5 mb-5' type="submit" disabled={loading}>
-          {loading ? 'Auditing...' : 'Audit URL'}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="flex gap-2 mb-8">
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com"
+            required
+            className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900" />
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 transition">
+            {loading ? 'Auditing...' : 'Audit'}
+          </button>
+        </form>
 
-      {error && <p>Error: {error}</p>}
+        {loading && (
+          <div className="rounded-lg border border-slate-200 bg-white p-6 animate-pulse">
+            <div className="h-4 w-1/2 bg-slate-200 rounded mb-3" />
+            <div className="h-4 w-1/3 bg-slate-200 rounded mb-3" />
+            <div className="h-4 w-2/3 bg-slate-200 rounded" />
+          </div>
+        )}
 
-      {report && (
-        <div>
-          <p>URL: {report.url}</p>
-          <p>Status: {report.httpStatus}</p>
-          <p>Response time: {report.responseTimeMs}ms</p>
-          <p>Title: {report.title}</p>
-          <p>Meta description: {report.metaDescription}</p>
-          <p>H1 count: {report.h1Count}</p>
-          <p>Images missing alt: {report.imagesMissingAlt} / {report.totalImages}</p>
-          <p>Word count: {report.wordCount}</p>
-          {report.warning && <p>Note: {report.warning}</p>}
-        </div>
-      )}
-    </main>
+        {error && !loading && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        {report && !loading && (
+          <div className="rounded-lg border border-slate-200 bg-white p-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-slate-900 truncate">{report.url}</span>
+              <span
+                className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                  report.httpStatus >= 200 && report.httpStatus < 300
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}
+              >
+                {report.httpStatus}
+              </span>
+            </div>
+
+            {report.warning ? (
+              <p className="text-sm text-slate-500">{report.warning}</p>
+            ) : (
+              <dl className="grid grid-cols-2 gap-y-2 text-sm">
+                <Row label="Response time" value={`${report.responseTimeMs} ms`} />
+                <Row label="Title" value={report.title || '—'} />
+                <Row label="Meta description" value={report.metaDescription || '—'} />
+                <Row label="H1 count" value={report.h1Count} />
+                <Row label="Word count" value={report.wordCount} />
+                <Row label="Images missing alt" value={`${report.imagesMissingAlt} / ${report.totalImages}`} />
+              </dl>
+            )}
+          </div>
+        )}
+      </main>
+
+      <footer className="text-center text-xs text-slate-400 py-6">
+        Built for{' '}
+        <a href="https://digitalheroesco.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-slate-600"
+        >
+          Digital Heroes Training Task
+        </a>
+      </footer>
+    </div>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <>
+      <dt className="text-slate-500">{label}</dt>
+      <dd className="text-slate-900 text-right truncate">{value}</dd>
+    </>
   );
 }
