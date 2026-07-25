@@ -96,6 +96,12 @@ export default function Home() {
                 <Row label="H1 count" value={report.h1Count} />
                 <Row label="Word count" value={report.wordCount} />
                 <Row label="Images missing alt" value={`${report.imagesMissingAlt} / ${report.totalImages}`} />
+                <Row label="Canonical URL" value={report.canonicalUrl || 'Not set'} />
+                <Row label="Mobile viewport tag" value={report.hasViewportMeta ? 'Present' : 'Missing'} />
+                <Row label="Open Graph tags" value={report.ogTagsPresent ? 'Present' : 'Missing'} />
+                {report.redirectCount > 0 && (
+                  <Row label="Redirects followed" value={report.redirectCount} />
+                )}
               </dl>
             )}
           </div>

@@ -9,6 +9,7 @@ async function fetchAndAuditUrl(targetUrl) {
 
   const startTime = Date.now();
   let response;
+  const redirectChain = [];
 
   try {
     response = await axios.get(targetUrl, {
@@ -16,7 +17,10 @@ async function fetchAndAuditUrl(targetUrl) {
       responseType: 'text',
       validateStatus: () => true,
       maxRedirects: 5,
-      headers: { 'User-Agent': 'PagePulse-Auditor/1.0' }
+      headers: { 'User-Agent': 'PagePulse-Auditor/1.0' },
+      beforeRedirect: (options, { headers }) => {
+        redirectChain.push(options.href);
+      }
     });
   } catch (err) {
      // axios uses these codes specifically; anything else we treat as a generic fetch failure
@@ -34,6 +38,8 @@ async function fetchAndAuditUrl(targetUrl) {
 
   const report = {
     url: targetUrl,
+    finalUrl: response.request?.res?.responseUrl || targetUrl,
+    redirectCount: redirectChain.length,
     httpStatus: response.status,
     responseTimeMs,
     contentType
@@ -57,6 +63,17 @@ async function fetchAndAuditUrl(targetUrl) {
   const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
   const wordCount = bodyText.length > 0 ? bodyText.split(' ').length : 0;
 
+  const canonicalUrl = $('link[rel="canonical"]').attr('href') || null;
+
+  const hasViewportMeta = $('meta[name="viewport"]').length > 0;
+
+  const ogTags = {
+    title: $('meta[property="og:title"]').attr('content') || null,
+    description: $('meta[property="og:description"]').attr('content') || null,
+    image: $('meta[property="og:image"]').attr('content') || null
+  };
+  const ogTagsPresent = Object.values(ogTags).some(Boolean);
+
   return {
     ...report,
     title,
@@ -64,7 +81,11 @@ async function fetchAndAuditUrl(targetUrl) {
     h1Count,
     totalImages,
     imagesMissingAlt,
-    wordCount
+    wordCount,
+    canonicalUrl,
+    hasViewportMeta,
+    ogTagsPresent,
+    ogTags
   };
 }
 
